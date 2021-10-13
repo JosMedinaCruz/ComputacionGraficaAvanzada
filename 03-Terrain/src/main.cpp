@@ -80,6 +80,9 @@ Model modelDartLegoRightLeg;
 // Model animate instance
 // Mayow
 Model mayowModelAnimate;
+Model gutsModelAnimateR; //Reposo
+Model gutsModelAnimate;  //Corriendo
+
 // Terrain model instance
 Terrain terrain(-1, -1, 200, 8, "../Textures/MapaAlturas1.png");// Primeras 2 coordenadas en donde cocolocamos el terreno, el 200 es el no. de subdivisiones del terreno
 				//-1 -1  60  20-> es la ponderación max del mapa de alturas "../Textures/heightmap.png"
@@ -112,10 +115,13 @@ glm::mat4 modelMatrixLambo = glm::mat4(1.0);
 glm::mat4 modelMatrixAircraft = glm::mat4(1.0);
 glm::mat4 modelMatrixDart = glm::mat4(1.0f);
 glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
+//Guts
+glm::mat4 modelMatrixGuts = glm::mat4(1.0f);
 
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
 int modelSelected = 0;
 bool enableCountSelected = true;
+int selectAnim = 0;
 
 // Variables to animations keyframes
 bool saveFrame = false, availableSave = true;
@@ -273,6 +279,13 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	//Mayow
 	mayowModelAnimate.loadModel("../models/mayow/personaje2.fbx");
 	mayowModelAnimate.setShader(&shaderMulLighting);
+
+	//Guts
+	gutsModelAnimateR.loadModel("../models/guts/guts_animD.fbx"); //Reposo
+	gutsModelAnimateR.setShader(&shaderMulLighting);
+
+	gutsModelAnimate.loadModel("../models/guts/guts_anim.fbx"); //Corriendo
+	gutsModelAnimate.setShader(&shaderMulLighting);
 
 	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
 
@@ -507,6 +520,7 @@ void destroy() {
 
 	// Custom objects animate
 	mayowModelAnimate.destroy();
+	gutsModelAnimate.destroy();
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -584,7 +598,7 @@ bool processInput(bool continueApplication) {
 	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){
 		enableCountSelected = false;
 		modelSelected++;
-		if(modelSelected > 2)
+		if(modelSelected > 3)
 			modelSelected = 0;
 		if(modelSelected == 1)
 			fileName = "../animaciones/animation_dart_joints.txt";
@@ -669,6 +683,7 @@ bool processInput(bool continueApplication) {
 		modelMatrixDart = glm::translate(modelMatrixDart, glm::vec3(-0.02, 0.0, 0.0));
 	else if (modelSelected == 2 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		modelMatrixDart = glm::translate(modelMatrixDart, glm::vec3(0.02, 0.0, 0.0));
+	
 	//Para que al mover a May respete el terreno al moverse
 	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 		modelMatrixMayow = glm::rotate(modelMatrixMayow, 0.02f, glm::vec3(0, 1, 0));
@@ -678,6 +693,32 @@ bool processInput(bool continueApplication) {
 		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, 0.02));
 	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0.0, 0.0, -0.02));
+
+	//Guts movimiento
+	if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		modelMatrixGuts = glm::rotate(modelMatrixGuts, 0.02f, glm::vec3(0, 1, 0));
+	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		modelMatrixGuts = glm::rotate(modelMatrixGuts, -0.02f, glm::vec3(0, 1, 0));
+
+	if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		modelMatrixGuts = glm::translate(modelMatrixGuts, glm::vec3(0.0, 0.0, 0.02));
+		if (selectAnim == 0)
+			selectAnim = 1;
+	}
+	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		modelMatrixGuts = glm::translate(modelMatrixGuts, glm::vec3(0.0, 0.0, -0.02));
+		if (selectAnim == 0)
+			selectAnim = 1;
+	}
+
+	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE) {
+		if (selectAnim == 1)
+			selectAnim = 0;
+	}
+	else if (modelSelected == 3 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE) {
+		if (selectAnim == 1)
+			selectAnim = 0;
+	}
 
 	glfwPollEvents();
 	return continueApplication;
@@ -698,6 +739,10 @@ void applicationLoop() {
 
 	modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(13.0f, 0.05f, -5.0f));
 	modelMatrixMayow = glm::rotate(modelMatrixMayow, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+
+	//Guts
+	modelMatrixGuts = glm::translate(modelMatrixGuts, glm::vec3(10.0f, 0.05f, -5.0f));
+	modelMatrixGuts = glm::rotate(modelMatrixGuts, glm::radians(90.0f), glm::vec3(0, 1, 0));
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -885,6 +930,23 @@ void applicationLoop() {
 		modelMatrixMayowBody = glm::scale(modelMatrixMayowBody, glm::vec3(0.021, 0.021, 0.021));
 		mayowModelAnimate.setAnimationIndex(0);
 		mayowModelAnimate.render(modelMatrixMayowBody);
+
+		//Guts
+		glm::mat4 modelMatrixGutsBody = glm::mat4(modelMatrixGuts);
+		//Se obtiene la normal del terreno
+		glm::vec3 Gejey = glm::normalize(terrain.getNormalTerrain(modelMatrixGutsBody[3][0], modelMatrixGutsBody[3][2])); 
+		glm::vec3 Gejex = glm::normalize(modelMatrixGutsBody[0]); // porque el eje x se mantiene
+		glm::vec3 Gejez = glm::normalize(glm::cross(Gejex, Gejey));
+		modelMatrixGutsBody[0] = glm::vec4(Gejex, 0.0f);
+		modelMatrixGutsBody[1] = glm::vec4(Gejey, 0.0f);
+		modelMatrixGutsBody[2] = glm::vec4(Gejez, 0.0f);///Se agregaron estas líneas para que el modelo se ajuste a la pendiente
+		modelMatrixGutsBody[3][1] = terrain.getHeightTerrain(modelMatrixGutsBody[3][0], modelMatrixGutsBody[3][2]);
+		
+		modelMatrixGutsBody = glm::scale(modelMatrixGutsBody, glm::vec3(0.015, 0.015, 0.015));
+		if (selectAnim == 1)
+			gutsModelAnimateR.render(modelMatrixGutsBody);
+		else if (selectAnim == 0)
+			gutsModelAnimate.render(modelMatrixGutsBody);
 
 		/*******************************************
 		 * Skybox
